@@ -1,0 +1,7 @@
+# add packages (without version) for development purposes in this file
+-r requirements.txt
+black
+flake8
+mypy
+pylint
+rope
