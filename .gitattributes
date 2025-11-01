@@ -1,0 +1,26 @@
+#
+# Auto detect text files and perform LF normalization
+#
+*                   text=auto
+
+#
+# You can find additional files to be added using:
+#     git ls-files | git check-attr -a --stdin | grep "text: auto"
+#
+
+#
+# Exclude files from exporting
+#
+.gitattributes      text export-ignore
+.gitignore          text export-ignore
+.gitkeep            text export-ignore
+.gitmodules         text export-ignore
+
+#
+# Always perform LF normalization
+#
+*.html              text diff=html
+
+#
+# Never perform LF normalization
+#
