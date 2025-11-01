@@ -20,6 +20,7 @@
 # Always perform LF normalization
 #
 *.html              text diff=html
+*.yml               text
 
 #
 # Never perform LF normalization
