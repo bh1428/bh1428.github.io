@@ -21,6 +21,7 @@
 #
 *.md                text diff=markdown
 *.toml              text
+*.webmanifest       text
 *.yml               text
 
 #
@@ -33,3 +34,4 @@
 # Never perform LF normalization
 #
 *.png               binary
+*.ico               binary
