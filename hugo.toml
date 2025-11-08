@@ -1,0 +1,23 @@
+baseURL = "https://benhattem.nl/"
+languageCode = "en-us"
+title = "benhattem.nl"
+theme = "hugo-m10c-benh"
+
+[menus]
+  [[menus.main]]
+    name = 'Home'
+    pageRef = '/'
+    weight = 10
+
+[params]
+  author = "Ben Hattem"
+  description = "Ben's personal website."
+  menu_item_separator = " - "
+  [[params.social]]
+    icon = "brand-github"
+    name = "Github"
+    url = "https://github.com/bh1428"
+  [[params.social]]
+    icon = "brand-linkedin"
+    name = "LinkedIn"
+    url = "https://www.linkedin.com/in/benhattem/"

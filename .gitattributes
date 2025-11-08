@@ -19,9 +19,17 @@
 #
 # Always perform LF normalization
 #
-*.html              text diff=html
+*.md                text diff=markdown
+*.toml              text
 *.yml               text
+
+#
+# Linux files which always have LF line endings at checkout
+#
+.aliases            text eol=lf
+.env                text eol=lf
 
 #
 # Never perform LF normalization
 #
+*.png               binary

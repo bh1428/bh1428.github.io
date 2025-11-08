@@ -1,0 +1,3 @@
+source .env
+alias get_latest_hugo_version='echo "HUGO_VERSION=$(curl -s https://formulae.brew.sh/api/formula/hugo.json | jq -r '.versions.stable')"'
+alias hugo="docker run --rm -p 1313:1313 -v \$(pwd):/src -e TZ='${HUGO_TZ}' docker.io/hugomods/hugo:debian-ci-non-root-${HUGO_VERSION}"

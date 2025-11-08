@@ -1,0 +1,3 @@
+[submodule "themes/hugo-m10c-benh"]
+	path = themes/hugo-m10c-benh
+	url = https://github.com/bh1428/hugo-m10c-benh.git
