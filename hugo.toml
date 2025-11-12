@@ -4,10 +4,16 @@ title = "benhattem.nl"
 theme = "hugo-m10c-benh"
 
 [menus]
-  [[menus.main]]
+  [[menu.main]]
+    identifier = "home"
     name = 'Home'
-    pageRef = '/'
-    weight = 10
+    url = "/"
+    weight = 1
+  [[menu.main]]
+    identifier = "posts"
+    name = "Posts"
+    url = "/posts/"
+    weight = 2
 
 [params]
   author = "Ben Hattem"
