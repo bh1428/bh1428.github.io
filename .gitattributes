@@ -19,6 +19,8 @@
 #
 # Always perform LF normalization
 #
+*.code-snippets     text
+*.json              text
 *.md                text diff=markdown
 *.toml              text
 *.webmanifest       text
