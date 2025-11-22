@@ -99,7 +99,7 @@ Show 10 oldest files (and convert `mtime` to a normal human readable format in y
 
 ```sql
 SELECT folder, name, size, DATETIME(mtime, 'unixepoch', 'localtime') FROM files
-ORDER BY mtime DESC
+ORDER BY mtime ASC
 LIMIT 10;
 ```
 
