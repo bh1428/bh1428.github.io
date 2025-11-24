@@ -13,6 +13,7 @@
         "pyenv",
         "pyproject",
         "sqlparse",
+        "tkinter",
         "unixepoch",
         "vaga",
         "venv",

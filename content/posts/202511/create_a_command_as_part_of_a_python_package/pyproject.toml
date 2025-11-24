@@ -1,0 +1,9 @@
+[project]
+name = "package"
+version = "0.1.0"
+
+[project.scripts]
+gui-console = "package.hello_world:main"
+
+[project.gui-scripts]
+gui-no-console = "package.hello_world:main"
