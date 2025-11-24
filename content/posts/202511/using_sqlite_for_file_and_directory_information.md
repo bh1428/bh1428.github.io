@@ -42,7 +42,7 @@ SELECT strftime('%s', 'now', '-12 hours');
 ```
 
 The script ([`fileinfo_to_sqlite.py`][fileinfo_to_sqlite.py]):
-{{< code file="/posts/202511/fileinfo_to_sqlite.py" language="python" >}}
+{{< code file="/posts/202511/using_sqlite_for_file_and_directory_information/fileinfo_to_sqlite.py" language="python" >}}
 
 It uses only basic functionality from the standard library; you do not need additional libraries or a virtual environment. If you have [Python installed][installing_python] you can run it like this:
 
@@ -132,7 +132,7 @@ CREATE INDEX IF NOT EXISTS ix_files_size ON files (size);
 
 [datetime_functions]: https://sqlite.org/lang_datefunc.html
 [dbeaver]: https://dbeaver.io/
-[fileinfo_to_sqlite.py]: /posts/202511/fileinfo_to_sqlite.py "`fileinfo_to_sqlite.py`"
+[fileinfo_to_sqlite.py]: /posts/202511/using_sqlite_for_file_and_directory_information/fileinfo_to_sqlite.py
 [installing_python]: https://realpython.com/installing-python/
 [shebang]: https://en.wikipedia.org/wiki/Shebang_(Unix)
 [sqlite]: https://www.sqlite.org/
