@@ -30,7 +30,7 @@ version = "0.1.0"
 
 Create a `package` subfolder and mark it as a package by creating an empty `package\__init__py`.
 
-Now add a basic _Hello World_ using [`tkinter`][python_docu_tkinter] ([`package\hello_world.py`][hello_world.py]):
+Now, add a basic _Hello World_ using [`tkinter`][python_docu_tkinter] ([`package\hello_world.py`][hello_world.py]):
 {{< code file="/posts/202511/create_a_command_as_part_of_a_python_package/hello_world.py" language="python" >}}
 
 Finally, create a virtual environment and install the package in [editable mode][pip_editable_mode] (e.g. on Windows):
