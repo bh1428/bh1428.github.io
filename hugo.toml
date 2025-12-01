@@ -37,6 +37,8 @@ theme = "hugo-m10c-benh"
     icon = "brand-linkedin"
     name = "LinkedIn"
     url = "https://www.linkedin.com/in/benhattem/"
+  [params.github]
+    bh1428_aoc = "https://github.com/bh1428/advent-of-code/blob/main/2025"
 
 [taxonomies]
   tag = 'tags'

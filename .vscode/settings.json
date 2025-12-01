@@ -5,6 +5,7 @@
         "benh",
         "benhattem",
         "disqus",
+        "divmod",
         "ensurepip",
         "Factorio",
         "Hattem",
@@ -12,12 +13,14 @@
         "pipx",
         "pyenv",
         "pyproject",
+        "pytest",
         "sqlparse",
         "tkinter",
         "unixepoch",
         "vaga",
         "venv",
         "venvs",
-        "virtualenv"
+        "virtualenv",
+        "Wastl"
     ]
 }
