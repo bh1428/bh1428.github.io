@@ -49,7 +49,7 @@ def part_1(rotations: list[str]) -> int:
     return times_landed_on_zero
 ```
 
-The function expects a `rotations` which is a list of `str` as input parameter: one string per rotation, e.g. `["L68", "R55, ...]`. For the full solution, including testing with [pytest][pytest_docu], see: [aoc2025_day01_secret_entrance.py]({{< param "github.bh1428_aoc" >}}/src/aoc2025_day01_secret_entrance.py#L78).
+The function expects a `rotations` which is a list of `str` as input parameter: one string per rotation, e.g. `["L68", "R55, ...]`. For the full solution, including testing with [pytest][pytest_docu], see: [aoc2025_day01_secret_entrance.py]({{< param "github.bh1428_aoc_2025" >}}aoc2025_day01_secret_entrance.py#L78).
 
 ## Part 2 - landing on or passing zero
 
@@ -97,7 +97,7 @@ def part_2(rotations: list[str]) -> int:
     return landing_on_or_passing_zero
 ```
 
-Again, the function expects a `rotations` as a `list[str]`. This is the same list of rotations as for _part 1_. For the full solution, including test cases, see: [aoc2025_day01_secret_entrance.py]({{< param "github.bh1428_aoc" >}}/src/aoc2025_day01_secret_entrance.py#L94).
+Again, the function expects a `rotations` as a `list[str]`. This is the same list of rotations as for _part 1_. For the full solution, including test cases, see: [aoc2025_day01_secret_entrance.py]({{< param "github.bh1428_aoc_2025" >}}aoc2025_day01_secret_entrance.py#L94).
 
 [aoc_2025_day_01]: https://adventofcode.com/2025/day/1
 [aoc_2025]: https://adventofcode.com/2025
