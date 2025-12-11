@@ -1,8 +1,8 @@
 +++
-date = '2025-11-22T16:23:09+01:00'
+date = "2025-11-22T16:23:09+01:00"
 draft = false
-title = 'Using SQLite for file and directory information'
-tags = ['python', 'sqlite3', 'sysadmin']
+title = "Using SQLite for file and directory information"
+tags = ["python", "sqlite3", "sysadmin"]
 +++
 Did you ever have a directory tree with thousands of directories and wondered which folder is the largest? Ever tried the _Windows Explorer_ on a folder with millions of files and see it chug along without really showing anything? This article describes a simple Python script which enables you to throw the file information in a [SQLite][sqlite] database and query using the power of SQL.
 

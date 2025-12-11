@@ -1,7 +1,7 @@
 +++
-date = '{{ .Date }}'
+date = "{{ .Date }}"
 draft = true
-title = '{{ replace .File.ContentBaseName "-" " " | title }}'
+title = "{{ replace .File.ContentBaseName "-" " " | title }}"
 tags = []
 +++
 The summary of the page goes here, i.e. above the `more` comment...

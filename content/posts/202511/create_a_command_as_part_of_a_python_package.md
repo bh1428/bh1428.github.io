@@ -1,8 +1,8 @@
 +++
-date = '2025-11-24T18:49:39+01:00'
+date = "2025-11-24T18:49:39+01:00"
 draft = false
-title = 'Create a command as part of a Python package'
-tags = ['python', 'packaging', 'windows', 'console']
+title = "Create a command as part of a Python package"
+tags = ["python", "packaging", "windows", "console"]
 +++
 The [Python Packaging User Guide][python_packaging_user_guide] describes how to create an [executable script][python_packaging_executable_script] as part of a Python package. The best know option is to declare a command in the `[project.scripts]` section of [`pyproject.toml`][python_packaging_pyproject.toml] for a script that runs in a console window. Lesser known is the `[project.gui-scripts]` table which allows you to create a GUI application without a console window (on Microsoft Windows). This article describes an entire walkthrough for both options.
 

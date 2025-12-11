@@ -1,7 +1,7 @@
 +++
-date = '2025-11-13T18:54:14+01:00'
+date = "2025-11-13T18:54:14+01:00"
 draft = false
-title = 'A slightly modern take on Python virtual environments'
+title = "A slightly modern take on Python virtual environments"
 tags = ["python", "venv", "pip", "uv"]
 +++
 As developers we often work on multiple projects at the same time: while working on a new feature in a Django 5.2 project you quickly have to fix a bug in an older Django 4.2 application. [Python virtual environments][python_virtual_enviroments] enable us to separate these two tasks and seamlessly switch  between them. This article explores ways of handling virtual environments both in a classical and in a somewhat more modern way.

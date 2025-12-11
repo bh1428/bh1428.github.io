@@ -1,7 +1,7 @@
 +++
-date = '2025-11-13T19:00:08+01:00'
+date = "2025-11-13T19:00:08+01:00"
 draft = false
-title = 'About'
+title = "About"
 +++
 This is the personal website of Ben Hattem. I am a Technology Consultant, Python developer and Full Stack Troubleshooter living in [The Netherlands][the_netherlands]. In my spare time I like to go for a run, tinker with [Raspberry Pi's][raspberry_pi] and play games like [Factorio][factorio] and [Eve Online][eve_online].
 
