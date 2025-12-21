@@ -51,7 +51,7 @@ user@host:~/non-bare$ find . -ls
     86821      4 drwxr-xr-x   2 user     user         4096 Dec 11 22:09 ./.git/objects/info
 ```
 
-Let's dump the content of the files (see [`dump_file_tree.py`][dump_file_tree] for the `dump_file_tree.py` script):
+Let's dump the content of the files (using [dump_file_tree.py]({{< param "github.benhattem_nl" >}}blob/main/content/posts/202512/git_under_the_hood/dump_file_tree.py)):
 
 ```text
 user@host:~/non-bare$ ../dump_file_tree.py
