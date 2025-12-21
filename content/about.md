@@ -1,5 +1,5 @@
 +++
-date = "2025-11-13T19:00:08+01:00"
+date = "2025-12-21T10:19:50+01:00"
 draft = false
 title = "About"
 +++
@@ -9,7 +9,7 @@ This site is a static website created using [Hugo][hugo] with a [template][templ
 
 I want to clarify that everything on this site reflects my personal opinions, which may be right or wrong (you decide). The only certainty I have is that I don't know everything. That may be unfortunate, but it is what it is.
 
-In case you want, you can reach me via benghattem (at) gmail (dot) com.
+In case you want, you can reach me via [Bluesky](https://bsky.app/profile/benhattem.nl) or email benghattem (at) gmail (dot) com.
 
 [eve_online]: https://www.eveonline.com/
 [factorio]: https://www.factorio.com/

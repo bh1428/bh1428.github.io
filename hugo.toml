@@ -35,8 +35,8 @@ theme = "hugo-m10c-benh"
     url = "https://github.com/bh1428"
   [[params.social]]
     icon = "brand-bluesky"
-    name = "BlueSky"
-    url = "https://bsky.app/profile/benhattem.bsky.social"
+    name = "Bluesky"
+    url = "https://bsky.app/profile/benhattem.nl"
   [[params.social]]
     icon = "brand-linkedin"
     name = "LinkedIn"
