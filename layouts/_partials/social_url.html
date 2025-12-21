@@ -1,0 +1,9 @@
+{{- $social := (lower .social) -}}
+{{- $name := default site.Params.author .name -}}
+{{- $socialURL := "" }}
+{{- range site.Params.social -}}
+  {{- if eq (lower .name) $social -}}
+    {{- $socialURL = .url -}}
+  {{- end -}}
+{{- end -}}
+{{ if ne $socialURL "" }} <a href="{{ $socialURL }}">{{ $name }}</a>{{ else if ne $name "" }} {{ $name }}{{- end -}}

@@ -20,6 +20,7 @@
 # Always perform LF normalization
 #
 *.code-snippets     text
+*.html              text diff=html
 *.json              text
 *.md                text diff=markdown
 *.py                text diff=python
