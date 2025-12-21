@@ -469,10 +469,9 @@ This article is inspired and based on these resources:
 - [Julia Evans - Do we think of git commits as diffs, snapshots, and/or histories?][julia_evans_think_of_git]
 - [GeeksforGeeks - Top 10 GitHub Alternatives That You Can Consider][geeksforgeeks_top_10_github_alternatives]
 - [OpenGenius - What is Git's description file?][opengenius_gits_description_file]
-- [dump_file_tree.py][dump_file_tree]
+- [dump_file_tree.py]({{< param "github.benhattem_nl" >}}blob/main/content/posts/202512/git_under_the_hood/dump_file_tree.py)
 
 [bitbucket]: https://bitbucket.org/
-[dump_file_tree]: /posts/202512/git_under_the_hood/dump_file_tree.py
 [geeksforgeeks_top_10_github_alternatives]: https://www.geeksforgeeks.org/blogs/top-10-github-alternatives-that-you-can-consider/
 [git_blob_object]: https://git-scm.com/docs/user-manual.html#blob-object
 [git_branch]: https://git-scm.com/docs/git-branch

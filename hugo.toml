@@ -42,6 +42,7 @@ theme = "hugo-m10c-benh"
     name = "LinkedIn"
     url = "https://www.linkedin.com/in/benhattem/"
   [params.github]
+    benhattem_nl = "https://github.com/bh1428/bh1428.github.io/"
     bh1428_aoc_2025 = "https://github.com/bh1428/advent-of-code/blob/main/2025/"
 
 [taxonomies]
