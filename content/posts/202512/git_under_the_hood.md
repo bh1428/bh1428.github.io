@@ -4,12 +4,12 @@ draft = false
 title = "Git under the hood"
 tags = ["git", "dvcs"]
 +++
-You probably know [Git][git] and might be aware of the hidden `.git` folder where the actual repository is stored. Have you ever looked under the hood? Ever felt the need to know how Git does this magical thing with [`clone`][git_clone], [`commit`][git_commit], [`branch`][git_branch], etc.? What happens in the `.git` folder when you add a file? This article explores, for some of the standard operations, what really happens in the `.git` folder when a command is issued. Let's see how deep the rabbit hole goes!
+You probably know [Git][git] and might be aware of the (hidden) `.git` folder where the actual repository lives. Have you ever looked under the hood? Ever felt the need to know how Git does this magical thing with [`clone`][git_clone], [`commit`][git_commit], [`branch`][git_branch], etc.? What happens in the `.git` folder when you add a file? This article explores, for some of the standard operations, what really happens in the `.git` folder when a command is issued. Let's see how deep the rabbit hole goes!
 
 <!--more-->
 First of all, as a reminder: [Git][wikipedia_git] and [GitHub][wikipedia_github] are not the same. According to [Wikipedia][wikipedia]: "[Git][wikipedia_git] is a _distributed version control software system_ originally created by [Linus Torvalds][wikipedia_linus_torvalds] for version control in the development of the Linux kernel. [GitHub][wikipedia_github] is a _proprietary developer platform_ that allows developers to create, store, manage, and share their code." The only connection between the two is that [GitHub][wikipedia_github] uses [Git][wikipedia_git]. The same goes for sites like [GitLab][gitlab], [Bitbucket][bitbucket], [SourceForge][sourceforge], [AWS CodeCommit](https://aws.amazon.com/codecommit/) and even [Gitea][gitea]. Although they all use [Git][wikipedia_git] as repository, they are based on and add layers upon [Git][wikipedia_git] but are not the same.
 
-For this article you should have a basic knowledge of Git: you should know terminology like repository, commit, branch, HEAD, index, etc. In case you need a refresher, search for "basic git tutorial" in your favorite search engine (or ask an LLM). Examples in this article are on Linux ([WSL][windows_wsl] with [Ubuntu 24.04.3 LTS][ubuntu]) using Git version 2.43.0.
+For this article you should have basic Git knowledge: know terminology like repository, commit, branch, HEAD, index, etc. In case you need a refresher, search for "basic git tutorial" in your favorite search engine (or ask an LLM). Examples in this article are from the Python 3.14 Docker image (`python:3.14-slim` based on Debian Trixie) using Git version 2.47.3.
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -36,25 +36,25 @@ Although [hooks][git_hooks], local [exclude](git_exclude) and the description fi
 user@host:~$ cd ~/non-bare/
 user@host:~/non-bare$ rm .git/hooks/* .git/info/exclude .git/description
 user@host:~/non-bare$ find . -ls
-    86787      4 drwxr-xr-x   3 user     user         4096 Dec 11 22:09 .
-    86788      4 drwxr-xr-x   7 user     user         4096 Dec 11 22:10 ./.git
-    86819      4 -rw-r--r--   1 user     user           92 Dec 11 22:09 ./.git/config
-    86814      4 drwxr-xr-x   4 user     user         4096 Dec 11 22:09 ./.git/refs
-    86816      4 drwxr-xr-x   2 user     user         4096 Dec 11 22:09 ./.git/refs/tags
-    86815      4 drwxr-xr-x   2 user     user         4096 Dec 11 22:09 ./.git/refs/heads
-    86791      4 drwxr-xr-x   2 user     user         4096 Dec 11 22:10 ./.git/hooks
-    86817      4 -rw-r--r--   1 user     user           21 Dec 11 22:09 ./.git/HEAD
-    86811      4 drwxr-xr-x   2 user     user         4096 Dec 11 22:10 ./.git/info
-    86813      4 drwxr-xr-x   2 user     user         4096 Dec 11 22:09 ./.git/branches
-    86818      4 drwxr-xr-x   4 user     user         4096 Dec 11 22:09 ./.git/objects
-    86820      4 drwxr-xr-x   2 user     user         4096 Dec 11 22:09 ./.git/objects/pack
-    86821      4 drwxr-xr-x   2 user     user         4096 Dec 11 22:09 ./.git/objects/info
+    86846      4 drwxr-xr-x   3 user     user         4096 Dec 31 14:22 .
+    86853      4 drwxr-xr-x   7 user     user         4096 Dec 31 14:22 ./.git
+    94690      4 -rw-r--r--   1 user     user           92 Dec 31 14:22 ./.git/config
+    94688      4 drwxr-xr-x   4 user     user         4096 Dec 31 14:22 ./.git/refs
+    94701      4 drwxr-xr-x   2 user     user         4096 Dec 31 14:22 ./.git/refs/tags
+    94692      4 drwxr-xr-x   2 user     user         4096 Dec 31 14:22 ./.git/refs/heads
+    94650      4 drwxr-xr-x   2 user     user         4096 Dec 31 14:22 ./.git/hooks
+    94703      4 -rw-r--r--   1 user     user           21 Dec 31 14:22 ./.git/HEAD
+    94682      4 drwxr-xr-x   2 user     user         4096 Dec 31 14:22 ./.git/info
+    94686      4 drwxr-xr-x   2 user     user         4096 Dec 31 14:22 ./.git/branches
+    94705      4 drwxr-xr-x   4 user     user         4096 Dec 31 14:22 ./.git/objects
+    94707      4 drwxr-xr-x   2 user     user         4096 Dec 31 14:22 ./.git/objects/pack
+    94709      4 drwxr-xr-x   2 user     user         4096 Dec 31 14:22 ./.git/objects/info
 ```
 
 Let's dump the content of the files (using [dump_file_tree.py]({{< param "github.benhattem_nl" >}}blob/main/content/posts/202512/git_under_the_hood/dump_file_tree.py)):
 
 ```text
-user@host:~/non-bare$ ../dump_file_tree.py
+user@host:~/non-bare$ ../dump_file_tree.py --diff ../non-bare-diff.json
 >>> /home/user/non-bare/.git/config (UTF-8: 92 bytes)
 1: [core]
 2:     repositoryformatversion = 0
@@ -103,30 +103,18 @@ Changes to be committed:
 Has anything changed in the `.git` folder? Let's see:
 
 ```text
-user@host:~/non-bare$ ../dump_file_tree.py
+user@host:~/non-bare$ ../dump_file_tree.py --diff ../non-bare-diff.json
 >>> /home/user/non-bare/file1.txt (UTF-8: 15 bytes)
 1: content file 1
 <<< /home/user/non-bare/file1.txt
 
 >>> /home/user/non-bare/.git/index (BINARY: 104 bytes)
-00: 44 49 52 43 00 00 00 02 00 00 00 01 69 3b 34 2e 12 6e f5 14 69 3b 34 2e 12  DIRC........i;4..n..i;4..
-19: 6e f5 14 00 00 08 50 00 00 22 03 00 00 81 a4 00 00 03 e8 00 00 03 e8 00 00  n.....P.."...............
+00: 44 49 52 43 00 00 00 02 00 00 00 01 69 55 25 b5 22 80 42 eb 69 55 25 b5 22  DIRC........iU%.".B.iU%."
+19: 80 42 eb 00 00 08 30 00 01 53 37 00 00 81 a4 00 00 03 e8 00 00 03 e8 00 00  .B....0..S7..............
 32: 00 0f 17 25 18 7f 20 09 2d 75 cc ef 9e 55 75 23 1f bf 3a 8f ab 08 00 09 66  ...%.. .-u...Uu#..:.....f
-4b: 69 6c 65 31 2e 74 78 74 00 1d 65 7c a0 21 5e ad 79 56 4e e6 5e 81 12 9e c3  ile1.txt..e|.!^.yVN.^....
-64: ee de 4c 3d                                                                 ..L=
+4b: 69 6c 65 31 2e 74 78 74 00 d7 db 7d 1e 18 9d 75 b5 54 be 55 60 27 86 4f f4  ile1.txt...}...u.T.U`'.O.
+64: f6 92 e4 06                                                                 ....
 <<< /home/user/non-bare/.git/index
-
->>> /home/user/non-bare/.git/config (UTF-8: 92 bytes)
-1: [core]
-2:     repositoryformatversion = 0
-3:     filemode = true
-4:     bare = false
-5:     logallrefupdates = true
-<<< /home/user/non-bare/.git/config
-
->>> /home/user/non-bare/.git/HEAD (UTF-8: 21 bytes)
-1: ref: refs/heads/main
-<<< /home/user/non-bare/.git/HEAD
 
 >>> /home/user/non-bare/.git/objects/17/25187f20092d75ccef9e5575231fbf3a8fab08 (BINARY: 31 bytes)
 00: 78 01 4b ca c9 4f 52 30 34 65 48 ce cf 2b 49 cd 2b 51 48 cb cc 49 55 30 e4  x.K..OR04eH..+I.+QH..IU0.
@@ -182,11 +170,11 @@ We now have only one missing piece: the [index][git_index] (`.git/index`) was cr
 
 ```text
 >>> /home/user/non-bare/.git/index (BINARY: 104 bytes)
-00: .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..  DIRC........i;4..n..i;4..
-19: .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..  n.....P.."...............
+00: .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..  DIRC........iU%.".B.iU%."
+19: .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..  .B....0..S7..............
 32: .. .. 17 25 18 7f 20 09 2d 75 cc ef 9e 55 75 23 1f bf 3a 8f ab 08 .. .. 66  ...%.. .-u...Uu#..:.....f
-4b: 69 6c 65 31 2e 74 78 74 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..  ile1.txt..e|.!^.yVN.^....
-64: .. .. .. ..                                                                 ..L=
+4b: 69 6c 65 31 2e 74 78 74 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..  ile1.txt...}...u.T.U`'.O.
+64: .. .. .. ..                                                                 ....
 <<< /home/user/non-bare/.git/index
 ```
 
@@ -203,7 +191,7 @@ Let's commit our new file and see what happens:
 
 ```text
 user@host:~/non-bare$ git commit -m "first commit"
-[main (root-commit) 21590f7] first commit
+[main (root-commit) c4187f2] first commit
  1 file changed, 1 insertion(+)
  create mode 100644 file1.txt
 user@host:~/non-bare$ git status
@@ -214,47 +202,32 @@ nothing to commit, working tree clean
 What has changed?
 
 ```text
->>> /home/user/non-bare/file1.txt (UTF-8: 15 bytes)
-1: content file 1
-<<< /home/user/non-bare/file1.txt
-
+user@host:~/non-bare$ ../dump_file_tree.py --diff ../non-bare-diff.json
 >>> /home/user/non-bare/.git/index (BINARY: 137 bytes)
-00: 44 49 52 43 00 00 00 02 00 00 00 01 69 3b 34 2e 12 6e f5 14 69 3b 34 2e 12  DIRC........i;4..n..i;4..
-19: 6e f5 14 00 00 08 50 00 00 22 03 00 00 81 a4 00 00 03 e8 00 00 03 e8 00 00  n.....P.."...............
+00: 44 49 52 43 00 00 00 02 00 00 00 01 69 55 25 b5 22 80 42 eb 69 55 25 b5 22  DIRC........iU%.".B.iU%."
+19: 80 42 eb 00 00 08 30 00 01 53 37 00 00 81 a4 00 00 03 e8 00 00 03 e8 00 00  .B....0..S7..............
 32: 00 0f 17 25 18 7f 20 09 2d 75 cc ef 9e 55 75 23 1f bf 3a 8f ab 08 00 09 66  ...%.. .-u...Uu#..:.....f
 4b: 69 6c 65 31 2e 74 78 74 00 54 52 45 45 00 00 00 19 00 31 20 30 0a c3 6d ef  ile1.txt.TREE.....1 0..m.
-64: c2 a7 e6 fa b6 1a f1 e1 f6 31 af 8b b5 cc a9 5e d1 3d 91 17 e7 44 80 0c b7  .........1.....^.=...D...
-7d: 98 18 76 40 50 ca fc 13 e5 f2 cb dc                                         ..v@P.......
+64: c2 a7 e6 fa b6 1a f1 e1 f6 31 af 8b b5 cc a9 5e d1 f4 3c ac 53 ba 2e ae 7c  .........1.....^..<.S...|
+7d: 03 21 85 01 9b 64 7e 1b 67 23 70 57                                         .!...d~.g#pW
 <<< /home/user/non-bare/.git/index
 
 >>> /home/user/non-bare/.git/COMMIT_EDITMSG (UTF-8: 13 bytes)
 1: first commit
 <<< /home/user/non-bare/.git/COMMIT_EDITMSG
 
->>> /home/user/non-bare/.git/config (UTF-8: 92 bytes)
-1: [core]
-2:     repositoryformatversion = 0
-3:     filemode = true
-4:     bare = false
-5:     logallrefupdates = true
-<<< /home/user/non-bare/.git/config
-
->>> /home/user/non-bare/.git/HEAD (UTF-8: 21 bytes)
-1: ref: refs/heads/main
-<<< /home/user/non-bare/.git/HEAD
-
 >>> /home/user/non-bare/.git/refs/heads/main (UTF-8: 41 bytes)
-1: 21590f740c9cb696bf7b207fe9c8114be9283fc7
+1: c4187f2f386b9a87461ee1734dabbcff80f91744
 <<< /home/user/non-bare/.git/refs/heads/main
 
 >>> /home/user/non-bare/.git/logs/HEAD (UTF-8: 164 bytes)
-1: 0000000000000000000000000000000000000000 21590f740c9cb696bf7b207fe9c8114be9283fc7 Some User
-   <some.user@example.org> 1765488030 +0100    commit (initial): first commit
+1: 0000000000000000000000000000000000000000 c4187f2f386b9a87461ee1734dabbcff80f91744 Some User
+   <some.user@example.org> 1767190718 +0100    commit (initial): first commit
 <<< /home/user/non-bare/.git/logs/HEAD
 
 >>> /home/user/non-bare/.git/logs/refs/heads/main (UTF-8: 164 bytes)
-1: 0000000000000000000000000000000000000000 21590f740c9cb696bf7b207fe9c8114be9283fc7 Some User
-   <some.user@example.org> 1765488030 +0100    commit (initial): first commit
+1: 0000000000000000000000000000000000000000 c4187f2f386b9a87461ee1734dabbcff80f91744 Some User
+   <some.user@example.org> 1767190718 +0100    commit (initial): first commit
 <<< /home/user/non-bare/.git/logs/refs/heads/main
 
 >>> /home/user/non-bare/.git/objects/c3/6defc2a7e6fab61af1e1f631af8bb5cca95ed1 (BINARY: 53 bytes)
@@ -263,28 +236,23 @@ What has changed?
 32: e2 0e 27                                                                    ..'
 <<< /home/user/non-bare/.git/objects/c3/6defc2a7e6fab61af1e1f631af8bb5cca95ed1
 
->>> /home/user/non-bare/.git/objects/21/590f740c9cb696bf7b207fe9c8114be9283fc7 (BINARY: 129 bytes)
-00: 78 01 9d 8d 41 0a c2 30 10 00 3d e7 15 7b 17 4a d6 98 34 05 91 fe 41 7c c0  x...A..0..=..{.J..4...A|.
-19: 66 bb d1 82 21 92 a4 d0 e7 1b f4 07 de e6 32 33 9c 53 5a 1b e0 38 1d 5a 11  f...!.........23.SZ..8.Z.
-32: 01 36 6e 91 c8 27 1a c5 45 0a 0e 29 a2 60 74 a6 83 0f c1 32 d3 64 65 41 45  .6n..'..E..).`t....2.deAE
-4b: 5b 7b e6 02 b7 9c 04 ee 55 0a 5c 6a c7 61 eb 38 cb 4e e9 fd 92 21 97 c7 b5  [{......U.\j.a.8.N...!...
-64: a7 9d 3d 7b af 8d 86 a3 46 ad 15 7f 97 ad 2b 7f c8 2a ae a5 36 f8 35 d4 07  ..={....F.....+..*..6.5..
-7d: b6 89 3b f9                                                                 ..;.
-<<< /home/user/non-bare/.git/objects/21/590f740c9cb696bf7b207fe9c8114be9283fc7
-
->>> /home/user/non-bare/.git/objects/17/25187f20092d75ccef9e5575231fbf3a8fab08 (BINARY: 31 bytes)
-00: 78 01 4b ca c9 4f 52 30 34 65 48 ce cf 2b 49 cd 2b 51 48 cb cc 49 55 30 e4  x.K..OR04eH..+I.+QH..IU0.
-19: 02 00 5a 9f 07 3c                                                           ..Z..<
-<<< /home/user/non-bare/.git/objects/17/25187f20092d75ccef9e5575231fbf3a8fab08
+>>> /home/user/non-bare/.git/objects/c4/187f2f386b9a87461ee1734dabbcff80f91744 (BINARY: 128 bytes)
+00: 78 01 9d 8d 41 0a c2 30 10 00 3d e7 15 7b 17 4a d6 d2 a4 01 11 ff 20 3e 60  x...A..0..=..{.J...... >`
+19: b3 dd 68 c1 90 92 6c c1 e7 1b f4 07 de e6 32 33 5c 72 5e 15 d0 87 83 56 11  ..h...l.......23\r^....V.
+32: e0 d1 2d 92 f8 44 5e 5c a2 e8 90 12 0a 26 37 76 98 63 9c 98 29 4c b2 a0 a1  ..-..D^\.....&7v.c..)L...
+4b: 5d 9f a5 c2 ad 64 81 7b 93 0a e7 d6 71 d8 3b 5e e5 4d 79 7b c9 50 ea e3 d2  ]....d.{....q.;^.My{.P...
+64: d3 ce 63 b0 1e 67 38 5a b4 d6 f0 77 a9 5d f9 43 36 69 ad 4d e1 d7 30 1f b8  ..c..g8Z...w.].C6i.M..0..
+7d: 80 3c 03                                                                    .<.
+<<< /home/user/non-bare/.git/objects/c4/187f2f386b9a87461ee1734dabbcff80f91744
 ```
 
 The [`git log`][git_log] command shows:
 
 ```text
 user@host:~/non-bare$ git log
-commit 21590f740c9cb696bf7b207fe9c8114be9283fc7 (HEAD -> main)
+commit c4187f2f386b9a87461ee1734dabbcff80f91744 (HEAD -> main)
 Author: Some User <some.user@example.org>
-Date:   Thu Dec 11 22:20:30 2025 +0100
+Date:   Wed Dec 31 15:18:38 2025 +0100
 
     first commit
 ```
@@ -294,23 +262,23 @@ Summarized:
 - The index `.git/index` is modified, a `TREE` is added.
 - The commit message is stored in `.git/COMMIT_EDITMSG` (nice to know, but not that interesting).
 - Logs are created: `.git/logs/HEAD` and `.git/logs/refs/heads/main`. This is used for [`git log`][git_log] and [`git reflog`][git_reflog], we will not explorer this further here.
-- Two new objects are created: `.git/objects/c3/6defc2a7e6fab61af1e1f631af8bb5cca95ed1` and `.git/objects/21/590f740c9cb696bf7b207fe9c8114be9283fc7`.
+- Two new objects are created: `.git/objects/c3/6defc2a7e6fab61af1e1f631af8bb5cca95ed1` and `.git/objects/c4/187f2f386b9a87461ee1734dabbcff80f91744`.
 - Our `main` branch is created in `.git/refs/heads/main` (and `HEAD` points to this branch: `refs/heads/main`)
 
-As shown in the [`git status`][git_status] output, we now have a `main` branch and `HEAD` points to this `main` branch. The commit SHA-1 itself (`21590f740c9cb696bf7b207fe9c8114be9283fc7`) points to an object describing the commit content. To show this, we can use our Python script again but we may also use the standard [`git cat-file`][git_cat_file] command. First find out the type using the [`-t`][git_cat_file_t]:
+As shown in the [`git status`][git_status] output, we now have a `main` branch and `HEAD` points to this `main` branch. The commit SHA-1 itself (`c4187f2f386b9a87461ee1734dabbcff80f91744`) points to an object describing the commit content. To show this, we can use our Python script again but we may also use the standard [`git cat-file`][git_cat_file] command. First find out the type using the [`-t`][git_cat_file_t]:
 
 ```text
-user@host:~/non-bare$ git cat-file -t 21590f740c9cb696bf7b207fe9c8114be9283fc7
+user@host:~/non-bare$ git cat-file -t c4187f2f386b9a87461ee1734dabbcff80f91744
 commit
 ```
 
 It's a [commit object][git_commit_object], we knew that already, but it's nice to get it confirmed. What does it contain? We can use the [`-p`][git_cat_file_p] option:
 
 ```text
-user@host:~/non-bare$ git cat-file -p 21590f740c9cb696bf7b207fe9c8114be9283fc7
+user@host:~/non-bare$ git cat-file -p c4187f2f386b9a87461ee1734dabbcff80f91744
 tree c36defc2a7e6fab61af1e1f631af8bb5cca95ed1
-author Some User <some.user@example.org> 1765488030 +0100
-committer Some User <some.user@example.org> 1765488030 +0100
+author Some User <some.user@example.org> 1767190718 +0100
+committer Some User <some.user@example.org> 1767190718 +0100
 
 first commit
 ```
@@ -322,7 +290,7 @@ user@host:~/non-bare$ git cat-file -p c36defc2a7e6fab61af1e1f631af8bb5cca95ed1
 100644 blob 1725187f20092d75ccef9e5575231fbf3a8fab08    file1.txt
 ```
 
-And there we have our file object `1725187...` again. So we go from `21590f740c9cb696bf7b207fe9c8114be9283fc7` (commit) to `c36defc2a7e6fab61af1e1f631af8bb5cca95ed1` (tree) to `1725187f20092d75ccef9e5575231fbf3a8fab08` as a file in that tree. Note: trees are stored at multiple levels: a subdirectory will be stored as a separate tree (not shown here).
+And there we have our file object `1725187...` again. So we go from `c4187f2f386b9a87461ee1734dabbcff80f91744` (commit) to `c36defc2a7e6fab61af1e1f631af8bb5cca95ed1` (tree) to `1725187f20092d75ccef9e5575231fbf3a8fab08` as a file in that tree. Note: trees are stored at multiple levels: a subdirectory will be stored as a separate tree (not shown here).
 
 ## Changing a file
 
@@ -337,51 +305,40 @@ git commit -m "second commit"
 `.git` content:
 
 ```text
+user@host:~/non-bare$ ../dump_file_tree.py --diff ../non-bare-diff.json
 >>> /home/user/non-bare/file1.txt (UTF-8: 12 bytes)
 1: new content
 <<< /home/user/non-bare/file1.txt
 
 >>> /home/user/non-bare/.git/index (BINARY: 137 bytes)
-00: 44 49 52 43 00 00 00 02 00 00 00 01 69 3b 37 52 2b 01 98 a8 69 3b 37 52 2b  DIRC........i;7R+...i;7R+
-19: 01 98 a8 00 00 08 50 00 00 22 03 00 00 81 a4 00 00 03 e8 00 00 03 e8 00 00  ......P.."...............
+00: 44 49 52 43 00 00 00 02 00 00 00 01 69 55 32 8f 08 0d 17 5b 69 55 32 8f 08  DIRC........iU2....[iU2..
+19: 0d 17 5b 00 00 08 30 00 01 53 37 00 00 81 a4 00 00 03 e8 00 00 03 e8 00 00  ..[...0..S7..............
 32: 00 0c b6 6b a0 6d 31 5d 46 28 0b b0 9d 54 61 4c c5 2d 16 77 80 9f 00 09 66  ...k.m1]F(...TaL.-.w....f
 4b: 69 6c 65 31 2e 74 78 74 00 54 52 45 45 00 00 00 19 00 31 20 30 0a 1f 53 c0  ile1.txt.TREE.....1 0..S.
-64: 33 2b 89 b8 ad 3e 42 da 49 41 b7 9c 41 86 83 03 98 c1 7a f2 f8 9d 26 d1 59  3+...>B.IA..A.....z...&.Y
-7d: 05 4d 62 72 a0 39 f0 11 5b cb a2 40                                         .Mbr.9..[..@
+64: 33 2b 89 b8 ad 3e 42 da 49 41 b7 9c 41 86 83 03 98 f6 8a 5b f9 2b ca 78 54  3+...>B.IA..A......[.+.xT
+7d: 45 06 b6 98 80 4d c3 99 de f1 5c b5                                         E....M....\.
 <<< /home/user/non-bare/.git/index
 
 >>> /home/user/non-bare/.git/COMMIT_EDITMSG (UTF-8: 14 bytes)
 1: second commit
 <<< /home/user/non-bare/.git/COMMIT_EDITMSG
 
->>> /home/user/non-bare/.git/config (UTF-8: 92 bytes)
-1: [core]
-2:     repositoryformatversion = 0
-3:     filemode = true
-4:     bare = false
-5:     logallrefupdates = true
-<<< /home/user/non-bare/.git/config
-
->>> /home/user/non-bare/.git/HEAD (UTF-8: 21 bytes)
-1: ref: refs/heads/main
-<<< /home/user/non-bare/.git/HEAD
-
 >>> /home/user/non-bare/.git/refs/heads/main (UTF-8: 41 bytes)
-1: 0b725c4a9b5e9cdf54071807690a3a2f35f2a3d6
+1: d40f72dfc8d0b0b5f75851a0ba841fe1af856059
 <<< /home/user/non-bare/.git/refs/heads/main
 
 >>> /home/user/non-bare/.git/logs/HEAD (UTF-8: 319 bytes)
-1: 0000000000000000000000000000000000000000 21590f740c9cb696bf7b207fe9c8114be9283fc7 Some User
-   <some.user@example.org> 1765488030 +0100    commit (initial): first commit
-2: 21590f740c9cb696bf7b207fe9c8114be9283fc7 0b725c4a9b5e9cdf54071807690a3a2f35f2a3d6 Some User
-   <some.user@example.org> 1765488476 +0100    commit: second commit
+1: 0000000000000000000000000000000000000000 c4187f2f386b9a87461ee1734dabbcff80f91744 Some User
+   <some.user@example.org> 1767190718 +0100    commit (initial): first commit
+2: c4187f2f386b9a87461ee1734dabbcff80f91744 d40f72dfc8d0b0b5f75851a0ba841fe1af856059 Some User
+   <some.user@example.org> 1767191183 +0100    commit: second commit
 <<< /home/user/non-bare/.git/logs/HEAD
 
 >>> /home/user/non-bare/.git/logs/refs/heads/main (UTF-8: 319 bytes)
-1: 0000000000000000000000000000000000000000 21590f740c9cb696bf7b207fe9c8114be9283fc7 Some User
-   <some.user@example.org> 1765488030 +0100    commit (initial): first commit
-2: 21590f740c9cb696bf7b207fe9c8114be9283fc7 0b725c4a9b5e9cdf54071807690a3a2f35f2a3d6 Some User
-   <some.user@example.org> 1765488476 +0100    commit: second commit
+1: 0000000000000000000000000000000000000000 c4187f2f386b9a87461ee1734dabbcff80f91744 Some User
+   <some.user@example.org> 1767190718 +0100    commit (initial): first commit
+2: c4187f2f386b9a87461ee1734dabbcff80f91744 d40f72dfc8d0b0b5f75851a0ba841fe1af856059 Some User
+   <some.user@example.org> 1767191183 +0100    commit: second commit
 <<< /home/user/non-bare/.git/logs/refs/heads/main
 
 >>> /home/user/non-bare/.git/objects/b6/6ba06d315d46280bb09d54614cc52d1677809f (BINARY: 28 bytes)
@@ -395,51 +352,31 @@ git commit -m "second commit"
 32: 6d 0f 0a                                                                    m..
 <<< /home/user/non-bare/.git/objects/1f/53c0332b89b8ad3e42da4941b79c4186830398
 
->>> /home/user/non-bare/.git/objects/c3/6defc2a7e6fab61af1e1f631af8bb5cca95ed1 (BINARY: 53 bytes)
-00: 78 01 2b 29 4a 4d 55 30 36 67 30 34 30 30 33 31 51 48 cb cc 49 35 d4 2b a9  x.+)JMU06g040031QH..I5.+.
-19: 28 61 10 57 95 a8 57 e0 d4 2d 3d f3 7e 5e 68 a9 b2 fc 7e ab fe d5 1c 00 26  (a.W..W..-=.~^h...~.....&
-32: e2 0e 27                                                                    ..'
-<<< /home/user/non-bare/.git/objects/c3/6defc2a7e6fab61af1e1f631af8bb5cca95ed1
-
->>> /home/user/non-bare/.git/objects/21/590f740c9cb696bf7b207fe9c8114be9283fc7 (BINARY: 129 bytes)
-00: 78 01 9d 8d 41 0a c2 30 10 00 3d e7 15 7b 17 4a d6 98 34 05 91 fe 41 7c c0  x...A..0..=..{.J..4...A|.
-19: 66 bb d1 82 21 92 a4 d0 e7 1b f4 07 de e6 32 33 9c 53 5a 1b e0 38 1d 5a 11  f...!.........23.SZ..8.Z.
-32: 01 36 6e 91 c8 27 1a c5 45 0a 0e 29 a2 60 74 a6 83 0f c1 32 d3 64 65 41 45  .6n..'..E..).`t....2.deAE
-4b: 5b 7b e6 02 b7 9c 04 ee 55 0a 5c 6a c7 61 eb 38 cb 4e e9 fd 92 21 97 c7 b5  [{......U.\j.a.8.N...!...
-64: a7 9d 3d 7b af 8d 86 a3 46 ad 15 7f 97 ad 2b 7f c8 2a ae a5 36 f8 35 d4 07  ..={....F.....+..*..6.5..
-7d: b6 89 3b f9                                                                 ..;.
-<<< /home/user/non-bare/.git/objects/21/590f740c9cb696bf7b207fe9c8114be9283fc7
-
->>> /home/user/non-bare/.git/objects/17/25187f20092d75ccef9e5575231fbf3a8fab08 (BINARY: 31 bytes)
-00: 78 01 4b ca c9 4f 52 30 34 65 48 ce cf 2b 49 cd 2b 51 48 cb cc 49 55 30 e4  x.K..OR04eH..+I.+QH..IU0.
-19: 02 00 5a 9f 07 3c                                                           ..Z..<
-<<< /home/user/non-bare/.git/objects/17/25187f20092d75ccef9e5575231fbf3a8fab08
-
->>> /home/user/non-bare/.git/objects/0b/725c4a9b5e9cdf54071807690a3a2f35f2a3d6 (BINARY: 162 bytes)
-00: 78 01 9d ce 4d 0a c2 30 10 86 61 d7 39 45 f6 42 c9 5f 93 19 10 f1 0e e2 01  x...M..0..a.9E.B._.......
-19: 92 e9 44 05 db 94 34 05 8f 6f d0 1b b8 7b 37 cf c7 47 65 9e 9f 4d 1a 03 87  ..D...4..o...{7..Ge..M...
-32: 56 99 a5 ce a3 25 65 ad 49 80 09 e2 64 d9 99 29 3a 74 3a 05 24 a7 c1 83 55  V....%e.I...d..):t:.$...U
-4b: 16 41 ac b1 f2 d2 a1 1e 51 e5 e0 14 21 25 8f 3e e5 90 8c 0a 99 91 40 6b 97  .A......Q...!%.>......@k.
-64: 18 0d d8 4c 41 c4 bd 3d 4a 95 d7 32 b3 bc 6d 5c e5 69 eb 39 ec 3d 2f fc 8e  ...LA..=J..2..m\.i.9.=/..
-7d: f3 fa e2 a1 d4 fb 59 ea e0 47 07 e0 82 97 47 a5 95 12 f4 bd d8 3a f9 03 8b  ......Y..G....G......:...
-96: 8d a9 2c 93 fc 8d 88 0f f8 a4 47 bc                                         ..,.......G.
-<<< /home/user/non-bare/.git/objects/0b/725c4a9b5e9cdf54071807690a3a2f35f2a3d6
+>>> /home/user/non-bare/.git/objects/d4/0f72dfc8d0b0b5f75851a0ba841fe1af856059 (BINARY: 161 bytes)
+00: 78 01 9d 8e 41 0a c2 30 10 45 5d e7 14 b3 17 4a 26 13 9b 09 88 78 07 f1 00  x...A..0.E]....J&....x...
+19: 49 3a 51 c1 36 25 4d c1 e3 5b f5 06 ee 1e 1f de e3 a7 32 8e 8f 06 c6 f0 ae  I:Q.6%M..[........2......
+32: 55 11 c0 7c a0 a4 89 4c 64 1f 39 0c 24 d6 0c c1 7a 8b d1 f9 64 91 7b 26 4d  U..|...Ld.9.$...z...d.{&M
+4b: 9e d5 1c aa 4c 0d 3e 93 cb 26 13 f7 d1 07 76 b6 47 11 74 64 87 10 63 ca 99  ....L.>..&....v.G.td..c..
+64: 75 f6 e8 ac 55 61 6d f7 52 e1 52 46 81 eb 22 15 8e cb 86 dd ba e1 59 5e 61  u...Uam.R.RF..".......Y^a
+7d: 9c 9f d2 95 7a 3b 01 ba de a1 47 64 82 bd 46 ad 55 fa 5e 6c 9b f2 87 ac 16  ....z;....Gd..F.U.^l.....
+96: 49 65 1a e0 17 51 6f 14 1d 47 d4                                            Ie...Qo..G.
+<<< /home/user/non-bare/.git/objects/d4/0f72dfc8d0b0b5f75851a0ba841fe1af856059
 ```
 
 Let's follow the chain again:
 
 ```text
 user@host:~/non-bare$ git log -1
-commit 0b725c4a9b5e9cdf54071807690a3a2f35f2a3d6 (HEAD -> main)
+commit d40f72dfc8d0b0b5f75851a0ba841fe1af856059 (HEAD -> main)
 Author: Some User <some.user@example.org>
-Date:   Thu Dec 11 22:27:56 2025 +0100
+Date:   Wed Dec 31 15:26:23 2025 +0100
 
     second commit
-user@host:~/non-bare$ git cat-file -p 0b725c4a9b5e9cdf54071807690a3a2f35f2a3d6
+user@host:~/non-bare$ git cat-file -p d40f72dfc8d0b0b5f75851a0ba841fe1af856059
 tree 1f53c0332b89b8ad3e42da4941b79c4186830398
-parent 21590f740c9cb696bf7b207fe9c8114be9283fc7
-author Some User <some.user@example.org> 1765488476 +0100
-committer Some User <some.user@example.org> 1765488476 +0100
+parent c4187f2f386b9a87461ee1734dabbcff80f91744
+author Some User <some.user@example.org> 1767191183 +0100
+committer Some User <some.user@example.org> 1767191183 +0100
 
 second commit
 user@host:~/non-bare$ git cat-file -p 1f53c0332b89b8ad3e42da4941b79c4186830398
@@ -448,7 +385,7 @@ user@host:~/non-bare$ git cat-file -p b66ba06d315d46280bb09d54614cc52d1677809f
 new content
 ```
 
-Note the `parent` entry for commit `0b725c4a9b5e9cdf54071807690a3a2f35f2a3d6` which is `21590f740c9cb696bf7b207fe9c8114be9283fc7`: the SHA-1 of our previous commit. You can follow this (the objects still exist) and then find out the same objects we did before.
+Note the `parent` entry for commit `d40f72dfc8d0b0b5f75851a0ba841fe1af856059` which is `c4187f2f386b9a87461ee1734dabbcff80f91744`: the SHA-1 of our previous commit. You can follow this (the objects still exist) and then find out the same objects we did before.
 
 Notice: we now have two different objects for `file1.txt`:
 
@@ -506,9 +443,7 @@ This article is inspired and based on these resources:
 [pro_git_book_object_storage]: https://git-scm.com/book/en/v2/Git-Internals-Git-Objects#_object_storage
 [pro_git_book]: https://git-scm.com/book/en/v2
 [sourceforge]: https://sourceforge.net/
-[ubuntu]: https://ubuntu.com/
 [wikipedia_git]: https://en.wikipedia.org/wiki/Git
 [wikipedia_github]: https://en.wikipedia.org/wiki/GitHub
 [wikipedia_linus_torvalds]: https://en.wikipedia.org/wiki/Linus_Torvalds
 [wikipedia]: https://www.wikipedia.org/
-[windows_wsl]: https://learn.microsoft.com/en-us/windows/wsl/install

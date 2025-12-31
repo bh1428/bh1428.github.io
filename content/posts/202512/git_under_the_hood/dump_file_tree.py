@@ -1,34 +1,87 @@
 #!/usr/bin/env python3
-"""Dump a directory (including file content) as text.
+"""Dump content one or more directories as text.
 
 (c) 2025 Ben Hattem
-
-The main application for this script is to show the content of a small
-filesystem tree. The content of each file will be shown, either as text
-or as hex dump. This script is not optimized for large files / trees.
-Limited effort is done to consider memory usage. File content is not
-streamed but read entirely into memory (as lists of str).
 
 This is meant as a quick and dirty script to dump a file tree. Error
 handling (file authorization) is not implemented: every file and directory
 is supposed to be readable.
+
+The main application for this script is to show the content of a (small)
+filesystem tree. The content of each file is shown, either as text or as
+hex dump. This script is not optimized for large files / trees.
+Limited effort is done to consider memory usage. File content is not
+streamed but read (might be multiple times) entirely into memory.
+
+The '-d' / '--diff' gives an option to track changed files between two
+runs. When using this option, a (JSON) file with SHA256 hashes is created
+and a file is only shown when the hash has changed (new hash is persisted
+in the diff file).
 """
 
-import sys
+import argparse
+import json
 import textwrap
+from hashlib import sha256
 from pathlib import Path
+
+
+def store_diff_file(diff_file: str | Path, diff_info: dict[str, str]) -> int:
+    """Store file hashes in a file to be used during next run.
+
+    `diff_file` format is a JSON:
+      {
+        "filename": "sha256_hexdigest",
+        ...
+      }
+
+    Args:
+        diff_file (str | Path): JSON with SHA256 hashes
+        diff_info (dict[str, str]): dictionary to be stored in the diff_file
+
+    Returns:
+        int: number of bytes written
+    """
+    diff_file = Path(diff_file)
+    diff_file_content = json.dumps(diff_info, indent="  ")
+    return diff_file.write_text(diff_file_content, encoding="UTF-8")
+
+
+def read_diff_file(diff_file: str | Path) -> dict[str, str]:
+    """Read stored file hashes from a previous run.
+
+    `diff_file` format is a JSON:
+      {
+        "filename": "sha256_hexdigest",
+        ...
+      }
+
+    When the `diff_file` is missing (or not yet created) an empty
+    dictionary is returned.
+
+    Args:
+        diff_file (str | Path): JSON with SHA256 hashes (see above)
+
+    Returns:
+        dict[str, str]: dictionary: {"file_name": "sha256_hexdigest", ...}
+    """
+    diff_file = Path(diff_file)
+    diff_info = {}
+    if diff_file.exists():
+        diff_info = json.loads(diff_file.read_text(encoding="UTF-8"))
+    return diff_info
 
 
 def guess_text_encoding(path: Path, sample_size: int = 5 * 1024) -> str:
     """Guesstimate file encoding.
 
     The algorithm is very basic: if the first `sample_size` bytes of a file
-    can be converted to Unicode ('UTF-8') the file is considered to be in
-    text format. Otherwise the file is supposed to be binary. Although this
-    is a huge simplification it is good enough for our purposes.
+    can be converted to Unicode ('UTF-8') the file is considered to be text
+    format. Otherwise the file is supposed to be binary. Although this is a
+    huge simplification it is good enough for this purpose.
 
     Args:
-        path (Path): file to be checked
+        path (Path): file to be guesstimated
         sample_size (int, optional): number of bytes to sample (default 5K).
 
     Returns:
@@ -110,33 +163,53 @@ def text_dump(path: Path, line_width: int = 120) -> str:
     return "\n".join(text_lines)
 
 
-def dump_file_tree(root: str | Path) -> None:
+def dump_file_tree(root: str | Path, diff_file: None | str) -> None:
     """Dump the content of a filesystem tree.
 
     Binary files will be shown as hex dump, text files as lines of text.
 
     Args:
         root (str | Path): root of the tree to dump
+        diff_file (None | str): (optional) file to track differences
     """
+    # get stored hashes when needed
+    diff_info = {} if diff_file is None else read_diff_file(diff_file)
+
+    # process files
     root = Path(root).resolve()
     for path, _, files in root.walk(on_error=print):
         for file in files:
+            # check / update hash if required
             full_name = path / file
-            full_name_to_print = str(full_name)
+            full_name_str = str(full_name)
+            if diff_file is not None:
+                file_hash = sha256(full_name.read_bytes()).hexdigest()
+                if (full_name_str in diff_info) and (diff_info[full_name_str] == file_hash):
+                    continue
+                diff_info[full_name_str] = file_hash
+
+            # dump file content
             encoding = guess_text_encoding(full_name)
             file_size = full_name.stat().st_size
-            print(f">>> {full_name_to_print} ({encoding}: {file_size} byte{'s' if file_size != 1 else ''})")
+            print(f">>> {full_name_str} ({encoding}: {file_size} byte{'s' if file_size != 1 else ''})")
             if encoding == "BINARY":
                 print(hex_dump(full_name))
             else:
                 print(text_dump(full_name))
-            print(f"<<< {full_name_to_print}")
+            print(f"<<< {full_name_str}")
             print()
+
+    # persist hashes if required
+    if diff_file is not None:
+        store_diff_file(diff_file, diff_info)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        dump_file_tree(".")
-    else:
-        for start_dir in sys.argv[1:]:
-            dump_file_tree(start_dir)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--diff", dest="diff_file", action="store", help="file to track differences")
+    parser.add_argument("start_dirs", nargs="*")
+    args = parser.parse_args()
+    if not args.start_dirs:
+        args.start_dirs = ["."]
+    for start_dir in args.start_dirs:
+        dump_file_tree(start_dir, args.diff_file)
