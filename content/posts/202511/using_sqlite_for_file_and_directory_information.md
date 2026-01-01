@@ -117,7 +117,7 @@ This script is definitely not the fastest way of getting file information. If yo
 Did you know you can use the Python [sqlite3][sqlite3] module to query SQLite databases as well? Just call it as a module:
 
 ```bash
-python -m sqlite3 database.db
+python3 -m sqlite3 database.db
 ```
 
 Although not always required... If you have a very large set of files and / or have complicated queries you can create additional indices on the `files` table. For example:

@@ -135,7 +135,7 @@ A classic virtual environment has to be activated before it can be used. You hav
 ```bash
 cd ~/dj_42/
 source .venv/bin/activate
-python -m django version
+python3 -m django version
 ```
 
 Output:
@@ -144,7 +144,7 @@ Output:
 user@hostname:~$ cd ~/dj_42/
 user@hostname:~/dj_42$ source .venv/bin/activate
 
-(.venv) user@hostname:~/dj_42$ python -m django version
+(.venv) user@hostname:~/dj_42$ python3 -m django version
 4.2.26
 ```
 
