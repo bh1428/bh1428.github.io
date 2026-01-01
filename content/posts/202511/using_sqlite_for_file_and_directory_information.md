@@ -47,7 +47,7 @@ The script ([`fileinfo_to_sqlite.py`][fileinfo_to_sqlite.py]):
 It uses only basic functionality from the standard library; you do not need additional libraries or a virtual environment. If you have [Python installed][installing_python] you can run it like this:
 
 ```bash
-python fileinfo_to_sqlite.py database.db folder_to_index
+python3 fileinfo_to_sqlite.py database.db folder_to_index
 ```
 
 It contains a [shebang][shebang], on Linux you can make it executable and run it directly:
